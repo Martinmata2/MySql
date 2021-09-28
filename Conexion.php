@@ -3,7 +3,7 @@
  * @version v2021_1
  * @author Martin Mata
  */
-namespace MYSQL;
+namespace clases\MySql;
 
 /**
  * Permite las funciones basicas de una coneccion a mysql bd
