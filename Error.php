@@ -4,7 +4,7 @@
  * @author Martin Mata
  */
  //namespace puede ser editado a la direccion donde se encuentran los archivos
-namespace clases\MySql;;
+namespace Clases\MySql;;
 
 /**
  * Archiva errores para debug 
