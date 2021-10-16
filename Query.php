@@ -31,7 +31,7 @@ class Query
             $this->conn = new Conexion();
             $this->conn->conectar();
         }
-        $this->conn->seleccionaBD(BD_GENERAL);
+        $this->conn->seleccionaBD(BD_GENERAL);        
         if ($this->conn->estaConectado)
         {
             if ($resultado = $this->conn->ejecutar("SHOW TABLES LIKE 'eliminados'"))
