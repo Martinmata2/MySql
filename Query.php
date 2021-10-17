@@ -40,16 +40,7 @@ class Query
             }
         }
     }
-
-    /**
-     * Cerrar conexion cuando la clase salga de scope
-     */
-    function __destruct()
-    {
-        //interrumpe transacciones por eso lo comentamos
-        //$this->conn->cerrar();
-    }
-
+    
     /**
      *
      * @param string $tabla
