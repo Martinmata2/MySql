@@ -147,7 +147,7 @@ class Query extends Conexion
         if ($this->conectado($this->base_datos))
         {
             $queryelements = "";
-            $query = "Update " . $this->conexion->real_escape_string($tabla) . " SET ";
+            $query = "Update " . $tabla . " SET ";
             foreach ($datos as $key => $value)
             {
                 $value = $value;
@@ -157,7 +157,7 @@ class Query extends Conexion
             }
             $queryelements = rtrim($queryelements, ',');
             $query .= $queryelements;
-            $query .= " WHERE " . $this->conexion->real_escape_string($buscar_por) . " = '$id' ";
+            $query .= " WHERE " . $buscar_por . " = '$id' ";
             //$this->error->reporte("aqui", $query);
             try
             {
@@ -200,7 +200,7 @@ class Query extends Conexion
         {
             try
             {
-                $query = "DELETE FROM " . $this->conexion->real_escape_string($tabla) . " WHERE " . $this->conexion->escape($busca_por) . "='$id' ";
+                $query = "DELETE FROM " . $this->conexion->real_escape_string($tabla) . " WHERE " . ($busca_por . "='$id' ";
                 $result = $this->conexion->query($query);
                 if ($result !== FALSE)                
                 {
@@ -249,7 +249,7 @@ class Query extends Conexion
         {
             try
             {
-                $query = "SELECT $campos FROM " . $this->conexion->real_escape_string($tabla);
+                $query = "SELECT $campos FROM " . $tabla;
                 if ($where != "0") $query .= " WHERE " . $where;
                 if ($orderby != "0") $query .= " ORDER BY " . $orderby;
                 if ($limit != 0) $query .= " Limit " . $limit;
@@ -298,11 +298,11 @@ class Query extends Conexion
         {
             try
             {
-                $query = "SELECT " . $campos . " FROM " . $this->conexion->real_escape_string($tabla);
-                if ($where != "0") $query .= " WHERE " . $this->conexion->real_escape_string($where);
-                if ($groupby != "0") $query .= " GROUP BY " . $this->conexion->real_escape_string($groupby);
-                if ($orderby != "0") $query .= " ORDER BY " . $this->conexion->real_escape_string($orderby);
-                if ($limit != "0") $query .= " Limit " . $this->conexion->real_escape_string($limit);
+                $query = "SELECT " . $campos . " FROM " .$tabla;
+                if ($where != "0") $query .= " WHERE " . $where;
+                if ($groupby != "0") $query .= " GROUP BY " .$groupby;
+                if ($orderby != "0") $query .= " ORDER BY " . $orderby;
+                if ($limit != "0") $query .= " Limit " . $limit;
                 //$this->error->reporte("aqui", $query);
                 $result = $this->conexion->query($query);
                 while ($fila = $result->fetch_object())
