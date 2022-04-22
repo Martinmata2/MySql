@@ -1,13 +1,12 @@
 <?php
 /**
- * @version v2021_1
+ * @version v2022_1
  * @author Martin Mata
  */
- //namespace puede ser editado a la direccion donde se encuentran los archivos
-namespace Clases\MySql;;
+namespace Clases\MySql;
 
 /**
- * Archiva errores para debug 
+ * ALmacena errores de mysql o cualquier otro error
  *
  * @author Martin
  *        
@@ -17,23 +16,21 @@ class Error
 
     /**
      * Inicia el objeto y crea tabla error
-     * BD_GENERAL es una constante definida en autoload
+     *
      * @param string $base_datos
      */
     function __construct($base_datos = BD_GENERAL)
     {
-        $conn = new Conexion();
-        $conn->conectar();
-        $conn->seleccionaBD($base_datos);
-        if ($conn->estaConectado) 
+        $conn = new Conexion($base_datos);
+        if($conn->conectado())
         {
-            if ($resultado = $conn->ejecutar("SHOW TABLES LIKE 'errores'")) 
-            {
-                if ($conn->total_filas($resultado) == 0)
-                    $conn->ejecutarDeArchivo($this->tabla());
+            $conn->conexion->query("SHOW TABLES LIKE 'errores'");
+            if($conn->conexion->field_count > 0)
+            {                              
+                $conn->conexion->query($this->tabla());
             }
         }
-        $conn->cerrar();
+        $conn->conexion->close();
     }
 
     /**
@@ -46,24 +43,21 @@ class Error
     public function reporte($donde, $que, $usuario = "admin", $base_datos = BD_GENERAL)
     {
         @session_start();
-        $conn = new Conexion();
-        $conn->conectar();
-        $conn->seleccionaBD($base_datos);
-        if ($conn->estaConectado) 
-        {
+        $conn = new Conexion($base_datos);
+        if($conn->conectado())
+        {        
             $query = "INSERT INTO errores VALUES(
-              NULL,
-              '" . $conn->escape($usuario) . "',
-              '" . date("Y-m-d H:i:s") . "',
-              '" . $conn->escape($donde) . "',
-              '" . $conn->escape($que) . "')";
-            $conn->ejecutar($query);
+			NULL,
+			'" . $conn->conexion->real_escape_string($usuario) . "',
+			'" . date("Y-m-d H:i:s") . "',
+			'" . $conn->conexion->real_escape_string($donde) . "',
+			'" . $conn->conexion->real_escape_string($que) . "')";
+            $conn->conexion->query($query);
         } 
         else 
         {
-            $this->error = "No hay coneccion";
-        }
-        $conn->cerrar();
+            $this->error = $conn->conexion->error;
+        }        
         return 0;
     }
 

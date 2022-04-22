@@ -1,46 +1,41 @@
 <?php
 /**
- * @version v2021_1
+ * @version v2022_1
  * @author Martin Mata
  */
-namespace Clases\MySql;;
+namespace Clases\MySql;
 
-class Query
+class Query extends Conexion
 {
 
     /** @var Error **/
     public $error;
-
-    /** @var Conexion **/
-    public $conn;
-
+    
     /**
      * Inicia el objeto
      *
      * @param object $conexion
      */
-    function __construct($conexion = null)
+    function __construct(string $base_datos = BD_GENERAL)
     {
-        $this->error = new Error();
-        if ($conexion !== null)
+        $this->error = new Error();       
+        parent::__construct($base_datos);        
+        if($this->conexion->select_db($base_datos))
         {
-            $this->conn = $conexion;
-        }
-        else
-        {
-            $this->conn = new Conexion();
-            $this->conn->conectar();
-        }
-        $this->conn->seleccionaBD(BD_GENERAL);        
-        if ($this->conn->estaConectado)
-        {
-            if ($resultado = $this->conn->ejecutar("SHOW TABLES LIKE 'eliminados'"))
+            $this->conexion->query("SHOW TABLES LIKE 'eliminados'");
             {
-                if ($this->conn->total_filas($resultado) == 0) $this->conn->ejecutarDeArchivo($this->tabla());
+                if ($this->conexion->field_count > 0) 
+                    $this->conexion->query($this->tabla());
             }
         }
+    }   
+    
+    function __destruct()
+    {
+        $this->conexion->close();
     }
     
+
     /**
      *
      * @param string $tabla
@@ -51,34 +46,30 @@ class Query
      *            <br><code>Base de datos a insertar datos</code>
      * @return int <br><code>numero de id insertado</code>
      */
-    protected function insertar($tabla, $datos, $base_datos, $usuario = "guess")
-    {
-        $id_insertado = 0;
-        $this->conn->seleccionaBD($base_datos);
-        if ($this->conn->estaConectado)
+    protected function insertar($tabla, $datos, $usuario = "guess")
+    {            
+        if ($this->conectado($this->base_datos))
         {
             $queryelements = "";
-            $query = "INSERT INTO " . $this->conn->escape($tabla) . " SET ";
+            $query = "INSERT INTO " . $this->conexion->real_escape_string($tabla) . " SET ";
             foreach ($datos as $key => $value)
             {
-                $key = $this->conn->escape($key);
-                $value = $this->conn->escape($value);
+                $key = $this->conexion->real_escape_string($key);
+                $value = $this->conexion->real_escape_string($value);
                 $queryelements .= "$key = '$value',";
             }
             $queryelements = rtrim($queryelements, ',');
             $query .= $queryelements;
             try
             {
-                $result = $this->conn->ejecutar($query);
+                $result = $this->conexion->query($query);
                 if ($result !== FALSE)
                 {
-                    $id_insertado = $this->conn->idInsertado();
-
-                    return $id_insertado;
+                    return $this->conexion->insert_id;                   
                 }
                 else
                 {
-                    $this->error->reporte(get_class($this) . __METHOD__, $query . "  " . $this->conn->error(), $usuario);                    
+                    $this->error->reporte(get_class($this) . __METHOD__, $query . "  " . $this->conexion->error);                    
                 }
             }
             catch (\Exception $e)
@@ -98,39 +89,33 @@ class Query
      * @param string $tabla
      *            <br><code>Nombre de la tabla a insertar</code>
      * @param \stdClass $datos
-     *            <br><code>Clase con los datos a insertar</code>
-     * @param string $base_datos
-     *            <br><code>Base de datos a insertar datos</code>
+     *            <br><code>Clase con los datos a insertar</code> 
      * @return int <br><code>Numero de id insertado</code>
      */
-    protected function reemplazar($tabla, $datos, $base_datos, $usuario = "guess")
+    protected function reemplazar($tabla, $datos, $usuario = "guess")
     {
-        $id_insertado = 0;
-        $this->conn->seleccionaBD($base_datos);
-        if ($this->conn->estaConectado)
+        if ($this->conectado($this->base_datos))
         {
             $queryelements = "";
-            $query = "REPLACE INTO " . $this->conn->escape($tabla) . " SET ";
+            $query = "REPLACE INTO " . $this->conexion->real_escape_string($tabla) . " SET ";
             foreach ($datos as $key => $value)
             {
-                $key = $this->conn->escape($key);
-                $value = $this->conn->escape($value);
+                $key = $this->conexion->real_escape_string($key);
+                $value = $this->conexion->real_escape_string($value);
                 $queryelements .= "$key = '$value',";
             }
             $queryelements = rtrim($queryelements, ',');
             $query .= $queryelements;
             try
             {
-                $result = $this->conn->ejecutar($query);
+                $result = $this->conexion->query($query);
                 if ($result !== FALSE)
                 {
-                    $id_insertado = $this->conn->idInsertado();
-
-                    return $id_insertado;
+                    return $this->conexion->insert_id;                  
                 }
                 else
                 {
-                    $this->error->reporte(get_class($this) . __METHOD__, $query . "  " . $this->conn->error(), $usuario);                    
+                    $this->error->reporte(get_class($this) . __METHOD__, $query . "  " . $this->conexion->error, $usuario);                    
                 }
             }
             catch (\Exception $e)
@@ -154,39 +139,36 @@ class Query
      * @param string $id
      *            <br><code>Id a buscar</code>
      * @param string $buscar_por
-     *            <br><code>Nombre del Campo que se busca </code>
-     * @param string $base_datos
-     *            <br><code>Base de datos a insertar datos</code>
+     *            <br><code>Nombre del Campo que se busca </code>     
      * @return int <br><code>id a modificar true, 0 false</code>
      */
-    protected function modificar($tabla, $datos, $id, $buscar_por, $base_datos, $usuario = "guess")
+    protected function modificar($tabla, $datos, $id, $buscar_por,  $usuario = "guess")
     {
-        $this->conn->seleccionaBD($base_datos);
-        if ($this->conn->estaConectado)
+        if ($this->conectado($this->base_datos))
         {
             $queryelements = "";
-            $query = "Update " . $this->conn->escape($tabla) . " SET ";
+            $query = "Update " . $this->conexion->real_escape_string($tabla) . " SET ";
             foreach ($datos as $key => $value)
             {
                 $value = $value;
-                $key = $this->conn->escape($key);
-                $value = $this->conn->escape($value);
+                $key = $this->conexion->real_escape_string($key);
+                $value = $this->conexion->real_escape_string($value);
                 $queryelements .= "$key = '$value',";
             }
             $queryelements = rtrim($queryelements, ',');
             $query .= $queryelements;
-            $query .= " WHERE " . $this->conn->escape($buscar_por) . " = '$id' ";
-            // $this->error->reporte("aqui", $query);
+            $query .= " WHERE " . $this->conexion->real_escape_string($buscar_por) . " = '$id' ";
+            //$this->error->reporte("aqui", $query);
             try
             {
-                $result = $this->conn->ejecutar($query);
+                $result = $this->conexion->query($query);
                 if ($result !== FALSE)
                 {
                     return $id;
                 }
                 else
                 {
-                    $this->error->reporte(get_class($this) . __METHOD__, $query . "  " . $this->conn->error(), $usuario);
+                    $this->error->reporte(get_class($this) . __METHOD__, $query . "  " . $this->conexion->error, $usuario);
                 }
             }
             catch (\Exception $e)
@@ -208,28 +190,26 @@ class Query
      * @param string $id
      *            <br><code>Id a buscar</code>
      * @param string $buscar_por
-     *            <br><code>Nombre del Campo que se busca </code>
-     * @param string $base_datos
-     *            <br><code>Base de datos a insertar datos</code>
+     *            <br><code>Nombre del Campo que se busca </code>     
      * @return int <br><code>1 true, 0 false</code>
      */
-    protected function eliminar($tabla, $id, $busca_por, $base_datos, $usuario = "guess")
+    protected function eliminar($tabla, $id, $busca_por, $usuario = "guess")
     {
-        $this->conn->seleccionaBD($base_datos);
-        if ($this->conn->estaConectado)
+        
+        if ($this->conectado($this->base_datos))
         {
             try
             {
-                $query = "DELETE FROM " . $this->conn->escape($tabla) . " WHERE " . $this->conn->escape($busca_por) . "='$id' ";
-                $result = $this->conn->ejecutar($query);
+                $query = "DELETE FROM " . $this->conexion->real_escape_string($tabla) . " WHERE " . $this->conexion->escape($busca_por) . "='$id' ";
+                $result = $this->conexion->query($query);
                 if ($result !== FALSE)                
                 {
-                    $this->insertar("eliminados", array("EliTabla"=>$tabla, "EliCampoID"=>$id,"EliCampoNombre"=>$busca_por), $base_datos);
+                    $this->insertar("eliminados", array("EliTabla"=>$tabla, "EliCampoID"=>$id,"EliCampoNombre"=>$busca_por));
                     return 1;
                 }
                 else
                 {
-                    $this->error->reporte(get_class($this) . __METHOD__, $query . "  " . $this->conn->error(), $usuario);
+                    $this->error->reporte(get_class($this) . __METHOD__, $query . "  " . $this->conexion->error, $usuario);
                 }
             }
             catch (\Exception $e)
@@ -249,9 +229,7 @@ class Query
      * @param string $campos
      *            <br><code>Campo Nombre as nombre, campo id as id</code>
      * @param string $tabla
-     *            <br><code>Nombre de la Tabla a Editar</code>
-     * @param string $base_datos
-     *            <br><code>Base de Datos</code>
+     *            <br><code>Nombre de la Tabla a Editar</code>    
      * @param string $sel_campo
      *            <br><code>Nombre del Campo a seleccionar</code>
      * @param string $seleccionado
@@ -264,21 +242,20 @@ class Query
      *            <br><code> 1</code>
      * @return string
      */
-    protected function options($campos, $tabla, $base_datos, $sel_campo, $seleccionado = 0, $where = "0", $orderby = "0", $limit = 0)
-    {
-        $this->conn->seleccionaBD($base_datos);
+    protected function options($campos, $tabla, $sel_campo, $seleccionado = 0, $where = "0", $orderby = "0", $limit = 0)
+    {        
         $options = "";
-        if ($this->conn->estaConectado)
+        if ($this->conectado($this->base_datos))
         {
             try
             {
-                $query = "SELECT $campos FROM " . $this->conn->escape($tabla);
+                $query = "SELECT $campos FROM " . $this->conexion->real_escape_string($tabla);
                 if ($where != "0") $query .= " WHERE " . $where;
                 if ($orderby != "0") $query .= " ORDER BY " . $orderby;
                 if ($limit != 0) $query .= " Limit " . $limit;
-                $result = $this->conn->ejecutar($query);
+                $result = $this->conexion->query($query);
                 // $this->error->reporte("paises", $query , "admin");
-                while ($fila = $this->conn->obtener_array($result))
+                while ($fila = $result->fetch_object())
                 {
                     $sltd = "";
                     if ($seleccionado == $fila[$sel_campo]) $sltd = " selected ";
@@ -304,8 +281,7 @@ class Query
      *            <br><code>Nombre del campo o campos a consultar</code>
      * @param string $tabla
      *            <br><code>Nombre de la tabla o tablas, ya sea en inner join o union</code>
-     * @param string $base_datos
-     *            <br><code>Base de Datos</code>
+    
      * @param string $where
      *            <br><code>campo = 'valor' and campo2 like "%valor2%" or campo3 = 'valor3' etc</code>
      * @param string $orderby
@@ -315,22 +291,21 @@ class Query
      * @param string $limit
      *            <br><code> 1</code>
      */
-    protected function consulta($campos, $tabla, $base_datos, $where = "0", $orderby = "0", $groupby = "0", $limit = "0", $usuario = "guess")
+    protected function consulta($campos, $tabla, $where = "0", $orderby = "0", $groupby = "0", $limit = "0", $usuario = "guess")
     {
-        $datos = array();
-        $this->conn->seleccionaBD($base_datos);
-        if ($this->conn->estaConectado)
+        $datos = array();        
+        if ($this->conectado($this->base_datos))
         {
             try
             {
-                $query = "SELECT " . $campos . " FROM " . $tabla;
-                if ($where != "0") $query .= " WHERE " . $where;
-                if ($groupby != "0") $query .= " GROUP BY " . $groupby;
-                if ($orderby != "0") $query .= " ORDER BY " . $orderby;
-                if ($limit != "0") $query .= " Limit " . $limit;
-                // $this->error->reporte("aqui", $query);
-                $result = $this->conn->ejecutar($query);
-                while ($fila = $this->conn->obtener_obj($result))
+                $query = "SELECT " . $campos . " FROM " . $this->conexion->real_escape_string($tabla);
+                if ($where != "0") $query .= " WHERE " . $this->conexion->real_escape_string($where);
+                if ($groupby != "0") $query .= " GROUP BY " . $this->conexion->real_escape_string($groupby);
+                if ($orderby != "0") $query .= " ORDER BY " . $this->conexion->real_escape_string($orderby);
+                if ($limit != "0") $query .= " Limit " . $this->conexion->real_escape_string($limit);
+                //$this->error->reporte("aqui", $query);
+                $result = $this->conexion->query($query);
+                while ($fila = $result->fetch_object())
                 {
                     $datos[] = $fila;
                 }
@@ -359,16 +334,13 @@ class Query
      * @return int <br><code>id a modificar true, 0 false</code>
      */
     protected function modificarEspecial($tabla, $datos, $where, $base_datos, $usuario = "guess")
-    {
-        $this->conn->seleccionaBD($base_datos);
-        if ($this->conn->estaConectado)
+    {        
+        if ($this->conectado($this->base_datos))
         {
             $queryelements = "";
-            $query = "Update " . $this->conn->escape($tabla) . " SET ";
+            $query = "Update " . $this->conexion->real_escape_string($tabla) . " SET ";
             foreach ($datos as $key => $value)
-            {
-                // $key = $this->conn->escape ( $key );
-                // $value = $this->conn->escape ( $value );
+            {                
                 $queryelements .= "$key = $value,";
             }
             $queryelements = rtrim($queryelements, ',');
@@ -377,15 +349,14 @@ class Query
             // $this->error->reporte ( get_class ( $this ) . __METHOD__, $query . " ", $usuario );
             try
             {
-                $result = $this->conn->ejecutar($query);
+                $result = $this->conexion->query($query);
                 if ($result !== FALSE)
                 {
                     return 1;
                 }
                 else
                 {
-                    $this->error->reporte(get_class($this) . __METHOD__, $query . "  " . $this->conn->error(), $usuario);
-                    
+                    $this->error->reporte(get_class($this) . __METHOD__, $query . "  " . $this->conexion->error, $usuario);                    
                 }
             }
             catch (\Exception $e)
@@ -405,7 +376,7 @@ class Query
      */
     private function tabla()
     {
-        $mysql = "
+        return "
             
 			CREATE TABLE IF NOT EXISTS `eliminados` (
 			  `EliID` int(11) NOT NULL AUTO_INCREMENT,
@@ -414,7 +385,6 @@ class Query
 			  `EliCampoNombre` varchar(40) NOT NULL,
 			  `updated` tinyint(1) NOT NULL,
 			  PRIMARY KEY (`EliID`)
-			) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;";
-        return $mysql;
+			) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;";        
     }
 }
