@@ -258,9 +258,9 @@ class Query extends Conexion
                 while ($fila = $result->fetch_object())
                 {
                     $sltd = "";
-                    if ($seleccionado == $fila[$sel_campo]) $sltd = " selected ";
+                    if ($seleccionado == $fila->$sel_campo) $sltd = " selected ";
 
-                    $options .= "<option value='" . $fila["id"] . "' " . $sltd . ">" . $fila["nombre"] . "</option>";
+                    $options .= "<option value='" . $fila->id . "' " . $sltd . ">" . $fila->nombre . "</option>";
                 }
 
                 return (strlen($options) > 0) ? $options : 0;
