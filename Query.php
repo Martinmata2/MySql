@@ -32,7 +32,8 @@ class Query extends Conexion
     
     function __destruct()
     {
-        $this->conexion->close();
+        if(is_resource($this->conexion))
+            $this->conexion->close();
     }
     
 
@@ -328,17 +329,15 @@ class Query extends Conexion
      * @param \stdClass $datos
      *            <br><code>Clase con los datos a insertar si los datos contienen cadenas, (string) use comillas para cubrielos "datos"</code>
      * @param string $where
-     *            <br><code>multiples condiciones</code>
-     * @param string $base_datos
-     *            <br><code>Base de datos a insertar datos</code>
+     *            <br><code>multiples condiciones</code>     
      * @return int <br><code>id a modificar true, 0 false</code>
      */
-    protected function modificarEspecial($tabla, $datos, $where, $base_datos, $usuario = "guess")
+    protected function modificarEspecial($tabla, $datos, $where, $usuario = "guess")
     {        
         if ($this->conectado($this->base_datos))
         {
             $queryelements = "";
-            $query = "Update " . $this->conexion->real_escape_string($tabla) . " SET ";
+            $query = "Update " . $tabla . " SET ";
             foreach ($datos as $key => $value)
             {                
                 $queryelements .= "$key = $value,";
