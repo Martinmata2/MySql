@@ -201,7 +201,7 @@ class Query extends Conexion
         {
             try
             {
-                $query = "DELETE FROM " . $this->conexion->real_escape_string($tabla) . " WHERE " . $busca_por . "='$id' ";
+                $query = "DELETE FROM $tabla WHERE " . $busca_por . "='$id' ";
                 $result = $this->conexion->query($query);
                 if ($result !== FALSE)                
                 {
