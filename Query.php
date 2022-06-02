@@ -224,6 +224,43 @@ class Query extends Conexion
         }
         return 0;
     }
+    
+    /**
+     *Usese con cuidado
+     * @param string $tabla
+     *            <br><code>Nombre de la Tabla a Editar</code>
+     * @param string $condicion
+     *            <br><code>condicion para eliminar</code>     
+     * @return int <br><code>1 true, 0 false</code>
+     */
+    protected function eliminarEspecial($tabla, $condicion, $usuario = "guess")
+    {
+        if ($this->conectado($this->base_datos))
+        {
+            try
+            {
+                $query = "DELETE FROM $tabla WHERE $condicion";
+                $result = $this->conexion->query($query);
+                if ($result !== FALSE)
+                {                    
+                    return 1;
+                }
+                else
+                {
+                    $this->error->reporte(get_class($this) . __METHOD__, $query . "  " . $this->conexion->error, $usuario);
+                }
+            }
+            catch (\Exception $e)
+            {
+                $this->error->reporte(get_class($this) . __METHOD__, $query . "  " . $e->getMessage() . $usuario);
+            }
+        }
+        else
+        {
+            return 0;
+        }
+        return 0;
+    }
 
     /**
      *
