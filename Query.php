@@ -22,10 +22,10 @@ class Query extends Conexion
         parent::__construct($base_datos);        
         if($this->conexion->select_db($base_datos))
         {
-            $this->conexion->query("SHOW TABLES LIKE 'eliminados'");
-            {
-                if ($this->conexion->field_count > 0) 
-                    $this->conexion->query($this->tabla());
+            if($resultado = $this->conexion->query("SHOW TABLES LIKE 'eliminados'"))
+            {                                       
+                if ($resultado->num_rows > 0) 
+                    $this->conexion->query($this->tabla());                
             }
         }
     }   

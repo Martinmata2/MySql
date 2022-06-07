@@ -24,10 +24,12 @@ class Error
         $conn = new Conexion($base_datos);
         if($conn->conectado())
         {
-            $conn->conexion->query("SHOW TABLES LIKE 'errores'");
-            if($conn->conexion->field_count > 0)
-            {                              
-                $conn->conexion->query($this->tabla());
+            if($resultado = $conn->conexion->query("SHOW TABLES LIKE 'errores'"))
+            {            
+                if($resultado->num_rows > 0)
+                {                              
+                    $conn->conexion->query($this->tabla());
+                }
             }
         }
         $conn->conexion->close();
