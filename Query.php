@@ -406,6 +406,31 @@ class Query extends Conexion
         return 0;
     }
 
+    protected function ultiorecord($tabla, $id)
+    {
+        $datos = array();
+        if ($this->conectado($this->base_datos))
+        {
+            try
+            {
+                $query = "SELECT MAX($id) as ultimo FROM $tabla";                
+                //$this->error->reporte("aqui", $query);
+                $result = $this->conexion->query($query);
+                while ($fila = $result->fetch_object())
+                {
+                    $datos[] = $fila;
+                }
+                return $datos;
+            }
+            catch (\Exception $e)
+            {
+                $this->error->reporte(get_class($this) . __METHOD__, $query . "  " . $e->getMessage(), $usuario);
+            }
+        }
+        else
+            return 0;
+        return 0;
+    }
     /**
      *
      * @return string Estructura para base de datos mysql
