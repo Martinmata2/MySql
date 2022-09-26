@@ -26,7 +26,7 @@ class Error
         {
             if($resultado = $conn->conexion->query("SHOW TABLES LIKE 'errores'"))
             {            
-                if($resultado->num_rows > 0)
+                if($resultado->num_rows == 0)
                 {                              
                     $conn->conexion->query($this->tabla());
                 }

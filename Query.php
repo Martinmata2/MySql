@@ -24,7 +24,7 @@ class Query extends Conexion
         {
             if($resultado = $this->conexion->query("SHOW TABLES LIKE 'eliminados'"))
             {                                       
-                if ($resultado->num_rows > 0) 
+                if ($resultado->num_rows == 0) 
                     $this->conexion->query($this->tabla());                
             }
         }
